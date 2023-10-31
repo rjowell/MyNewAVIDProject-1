@@ -27,6 +27,7 @@ import {
   Alert,
   ActivityIndicator,
   AppRegistry,
+  Dimensions,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -324,6 +325,16 @@ const bluetoothIDs ={
   chr_1132: "F0001132-0451-4000-B000-000000000000",
 }
 
+
+function compareProperty({ key, direction }) {
+  return function (a, b) {
+      const ap = a[key] || ''
+      const bp = b[key] || ''
+
+      return (direction === "desc" ? -1 : 1) * ((typeof ap === "string" && typeof bp === "string") ? ap.localeCompare(bp) : ap - bp)
+  }
+}
+
 function getMonthUsageData(month,year)
 {
   return new Promise(function(resolve,reject){
@@ -336,11 +347,16 @@ function getMonthUsageData(month,year)
     const monthDays= ["31","28","31","30","31","30","31","31","30","31","30","31"];
     if(year%4 == 0)
       monthDays[1]="29";
-
+    console.log("Hot Dogggs "+month+" "+year);
     month < 10 ? month = "0"+month:month=month;
-    console.log("Your Info Is "+currentUserData.uid);
-    console.log("Address "+webURLS.userList+"?action=findUserUsageDataByMonth&startTime="+year+"-"+month+"-01&endTime="+year+"-"+month+"-"+monthDays[month-1]+"&uid="+currentUserData.uid+"&token="+currentUserData.token);
-    fetch(webURLS.userList+"?action=findUserUsageDataByMonth&startTime="+year+"-"+month+"-01&endTime="+year+"-"+month+"-"+monthDays[month-1]+"&uid="+currentUserData.uid+"&token="+currentUserData.token,{method:'GET'}).then((responseData)=>responseData.json()).then((responseJson)=>{
+    console.log("Your Info Is "+currentUserData.uid+" "+currentUserData);
+    console.log("Address You "+webURLS.userList+"?action=findUserUsageDataByMonth&startTime="+year+"-"+month+"-01&endTime="+year+"-"+month+"-"+monthDays[month-1]+"&eMail="+currentUserData.email+"&uid="+currentUserData.uid+"&token="+currentUserData.token);
+    fetch(webURLS.userList+"?action=findUserUsageDataByMonth&startTime="+year+"-"+month+"-01&endTime="+year+"-"+month+"-"+monthDays[month-1]+"&eMail="+currentUserData.email+"&uid="+currentUserData.uid+"&token="+currentUserData.token,{method:'GET'}).then((responseData)=>responseData.json()).then((responseJson)=>{
+      console.log("Cal Data Is "+JSON.stringify(responseJson.data));
+      console.log("The size is "+responseJson.data.length);
+      const newValue = responseJson.data.sort(compareProperty({key:"_id",direction:"desc"}));
+      //newValue.toSorted();
+      console.log("New Things Are "+newValue);
       if(responseJson.data.length == 0)
       {
         console.log("No DAta");
@@ -350,7 +366,7 @@ function getMonthUsageData(month,year)
         //navigation.navigate(nextLoginScreen,{calendarInfo:"none"});
       }
 
-      for(var i=0;i<=responseJson.data.length;i++)
+      for(var i=0;i<responseJson.data.length;i++)
       { 
         if(responseJson.data[i].MinOfUseTotal > 0)
         {
@@ -379,8 +395,10 @@ function getMonthUsageData(month,year)
             resolve(dataObject);
           }).catch((error)=>{
             console.log(error.name+" "+error);
+            Alert.alert("Notice","Network Error - 1");
             if(error.name == "SyntaxError")
             {
+              Alert.alert("Notice","Network Error - 1A");
               reject("Network ErrorA");
             }
         
@@ -389,9 +407,12 @@ function getMonthUsageData(month,year)
         }
       }
     }).catch((error)=>{
-      console.log("An Error Man "+error);
+      Alert.alert("An Error Man "+error);
+      Alert.alert("Notice","Network Error - 2");
       if(error.name == "SyntaxError")
       {
+        Alert.alert("Notice","Network Error");
+        Alert.alert("Notice","Network Error - 2A");
         reject("Network ErrorB");
       }
   
@@ -415,14 +436,23 @@ function App(){
   {
       console.log("The Parameters Are "+JSON.stringify(route.params));
       var calendarData = route.params?route.params.calendarInfo:null;
+
+      
       var serialNumberInput = route.params?route.params.serialNumber:null;
       var fromInput = route.params?route.params.from:null;
       console.log("Cal Data Is "+JSON.stringify(calendarData));
-    return(<Drawer.Navigator initialRouteName='HOME' screenOptions={{drawerActiveTintColor:'white',drawerInactiveTintColor:'white',  drawerStyle:{drawerActiveTintColor:'yellow',  backgroundColor: avidPurpleHex}}}>
-            <Drawer.Screen name="HOME" component={MainScreen} initialParams={{calendarInfo:calendarData,serialNumber:serialNumberInput,from:fromInput}}/>
-            <Drawer.Screen name="USAGE SUBSTACK" component={UsageHistoryStack} options={{drawerItemStyle:{display:"none"},unmountOnBlur:true,headerShown:false}}/>
-            <Drawer.Screen name ="LOGOUT" component={LogoutStack}/>
-          </Drawer.Navigator>);
+      console.log("Ussss Data "+currentUserData);
+      return(<Drawer.Navigator initialRouteName='HOME' screenOptions={{drawerActiveTintColor:'white',drawerInactiveTintColor:'white',  drawerStyle:{drawerActiveTintColor:'yellow',  backgroundColor: avidPurpleHex}}}>
+      <Drawer.Screen name="HOME" component={MainScreen} initialParams={{calendarInfo:calendarData,serialNumber:serialNumberInput,from:fromInput}}/>
+      <Drawer.Screen name="USAGE SUBSTACK" component={UsageHistoryStack} options={{drawerItemStyle:{display:"none"},unmountOnBlur:true,headerShown:false}}/>
+      <Drawer.Screen name ="LOGOUT" component={LogoutStack}/>
+    </Drawer.Navigator>);
+      getMonthUsageData(new Date().getMonth()+1,new Date().getFullYear()).then((result)=>{
+       
+      });
+
+
+    
   }
   const LogoutStack = ({navigation}) =>
   //function LogoutStack(navigation)
@@ -478,8 +508,10 @@ function App(){
     
     function convertDateString(input)
     {
+      console.log("The Stuff BB "+input.substring(6,7));
       const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      return months[parseInt(input.substring(6,7))-1]+" "+input.substring(8,10)+", "+input.substring(0,4);
+      console.log("The Month Is "+input.substring(6,7)-1);
+      return months[parseInt(input.substring(5,7))-1]+" "+input.substring(8,10)+", "+input.substring(0,4);
     }
     
     return(<Stack.Navigator initialRouteName='Day Use Screen' >
@@ -492,7 +524,7 @@ function App(){
 
    console.log("Step 1 "+JSON.stringify(auth().currentUser));
    var nextScreen = auth().currentUser?"Main":"Login";
-   console.log("Step 2");
+   console.log("Step 2 "+nextScreen);
   
 
    if(auth().currentUser)
@@ -506,12 +538,15 @@ function App(){
         }
           
         currentUserData = JSON.parse(userData);
-        console.log("Data Successful! "+JSON.stringify(currentUserData.serialnumber));
+        console.log("Data Successful! "+JSON.stringify(currentUserData));
        
         //return;
         
         console.log("cheddar cheese");
       }).then(()=>{
+        
+        //userDeviceInfo = await AsyncStorage.getItem("userDeviceInfo");
+        
         AsyncStorage.getItem("userDeviceInfo").then((deviceInfo)=>{
 
           userDeviceInfo = deviceInfo;
@@ -533,7 +568,7 @@ function App(){
       }).then((returnValue)=>{
 
 
-      console.log("Taa Daaaa");
+      console.log("Taa Daaaa "+returnValue);
       return returnValue;
     });
       console.log("Doo Daa Dee");
@@ -592,12 +627,12 @@ const DayUsageScreen = ({route,navigation}) =>
 
     fetch(webURLS.userList+"?action=findUserUsageDataByDay&dayTime="+route.params.currentDate+"&uid="+currentUserData.uid+"&token="+currentUserData.token).then((response)=>response.json()).then((responseJson)=>{
       usageData = responseJson.data;
-      console.log("Information "+JSON.stringify(usageData));
+      //console.log("Information "+JSON.stringify(usageData));
       for(var x = 0;x < responseJson.data.length;x++)
       {
-        //console.log(responseJson.data[x]);
+        console.log("User Data Is "+responseJson.data[x].uid+" "+currentUserData.uid);
         var currentObj = [];
-        currentObj.push(responseJson.data[x].DateOfTreatment.substring(0,12));
+        currentObj.push(" "+responseJson.data[x].DateOfTreatment.substring(0,13));
         var ampm = ""
         var currentTime = ""
 
@@ -609,7 +644,7 @@ const DayUsageScreen = ({route,navigation}) =>
         else
         {
           currentTime += parseInt(responseJson.data[x].StandardTimeOfTreatment.substring(11,13));
-          ampm = "PM";
+          ampm = "AM";
         }
         currentTime += ":";
         currentTime += responseJson.data[x].StandardTimeOfTreatment.substring(14,16) +" "+ampm;
@@ -619,16 +654,39 @@ const DayUsageScreen = ({route,navigation}) =>
         if(responseJson.data[x].Type == "U")
         {
           currentObj.push(responseJson.data[x].PresetNumber);
-          currentObj.push(responseJson.data[x].MinOfUse);
+          //currentObj.push(responseJson.data[x].MinOfUse);
         }
         else
         {
           currentObj.push("");
-          currentObj.push("");
+          //currentObj.push("");
         }
         currentObj.push(">");
         //var currentElement = <Row data={["A","B"]} style={{backgroundColor:currentColor}}></Row>
-        tableInfo.push(currentObj);
+        console.log("This thing is "+currentObj);
+        console.log("Horses "+currentObj+" "+tableInfo.includes([currentObj[0],currentObj[1],currentObj[2],currentObj[3]]));
+
+        if(tableInfo.length == 0)
+          tableInfo.push(currentObj)
+        else
+        {
+          var itemExists = false;
+          for(var i=0;i<tableInfo.length;i++)
+          {
+            if(JSON.stringify(tableInfo[i])==JSON.stringify(currentObj))
+            {
+              itemExists = true;
+              break;
+            }
+            //console.log(JSON.stringify(tableInfo[i])==JSON.stringify(currentObj));
+          }
+          if(!itemExists)
+            tableInfo.push(currentObj);
+        }
+        /*
+        if(!tableInfo.includes(currentObj))
+          tableInfo.push(currentObj);
+        console.log("Sponge"+currentObj==tableInfo[0]);*/
       }
       if(dataLoaded == false)
       {
@@ -670,21 +728,24 @@ const DayUsageScreen = ({route,navigation}) =>
       }
     }
   
+
+    const widthArray = [Dimensions.get('screen').width * 0.4,Dimensions.get('screen').width * 0.3,Dimensions.get('screen').width * 0.2,Dimensions.get('screen').width * 0.1];
+
     return(<View>
       <View style={{alignSelf:'center',  flexDirection:'row',padding:'5%'}}>
-      <TouchableOpacity onPress={()=>{setButtons("Usage");setQuestionHeight(0);setUsageHeight(40);}} style={{flex:1,borderWidth:1,borderColor:avidPurpleHex,backgroundColor:usageBtnBkgrndClr}}><Text style={{padding:'4%',alignSelf:'center', fontSize:16,fontWeight:'bold',color:usageBtnTxtClr}}>Usage</Text></TouchableOpacity>
-      <TouchableOpacity onPress={()=>{setButtons("Question");setQuestionHeight(40);setUsageHeight(0);}} style={{flex:1,borderWidth:1,borderColor:avidPurpleHex,backgroundColor:questionBtnBkgrndClr}}><Text style={{padding:'4%',alignSelf:'center',fontSize:16,fontWeight:'bold',color:questionBtnTxtClr}}>Question</Text></TouchableOpacity>
+      <TouchableOpacity onPress={()=>{setButtons("Usage");setQuestionHeight(40);setUsageHeight(0);}} style={{flex:1,borderWidth:1,borderColor:avidPurpleHex,backgroundColor:usageBtnBkgrndClr}}><Text style={{padding:'4%',alignSelf:'center', fontSize:16,fontWeight:'bold',color:usageBtnTxtClr}}>Usage</Text></TouchableOpacity>
+      <TouchableOpacity onPress={()=>{setButtons("Question");setQuestionHeight(0);setUsageHeight(40);}} style={{flex:1,borderWidth:1,borderColor:avidPurpleHex,backgroundColor:questionBtnBkgrndClr}}><Text style={{padding:'4%',alignSelf:'center',fontSize:16,fontWeight:'bold',color:questionBtnTxtClr}}>Question</Text></TouchableOpacity>
       <TouchableOpacity onPress={()=>{setButtons("All");setQuestionHeight(40);setUsageHeight(40);}} style={{flex:1,borderWidth:1,borderColor:avidPurpleHex,backgroundColor:allBtnBkgrndClr}}><Text style={{padding:'4%',alignSelf:'center',fontSize:16,fontWeight:'bold',color:allBtnTxtClr}}>All</Text></TouchableOpacity>
      
       </View>
       <Table>
-        <Row textStyle={{fontSize:16,fontWeight:'bold',color:'#555555',textAlign:'center'}} data={["Date","Time","Preset#","Minutes of Use",""]}></Row>
+        <Row textStyle={{fontSize:16,fontWeight:'bold',color:'#555555',textAlign:'center'}} widthArr={widthArray} data={["Date","Time","Preset#",""]}></Row>
         <ScrollView>
       {
         tableData.map((rowData,index) => (
   
-          <TouchableOpacity buttonKey={index} onPress={()=>{var boolVal;if(index%2==0){boolVal=true;}else{boolVal=false;}navigation.navigate("Usage Data Detail",{dataObject:usageData[index],isUsage:boolVal});}}>
-          <Row textStyle={{fontSize:16,fontWeight:'bold',color:'#555555',textAlign:'center'}} key={index} data={rowData} style={[styles.dayUsageRow,{height:usageHeight,backgroundColor:'#d9fae9'},index%2 && {height:questionHeight,backgroundColor:'#e0ecff'}]} />
+          <TouchableOpacity buttonKey={index} onPress={()=>{var boolVal;if(rowData[2]==""){boolVal=false;}else{boolVal=true;}navigation.navigate("Usage Data Detail",{dataObject:usageData[index],isUsage:boolVal});}}>
+          <Row widthArr={widthArray} textStyle={{fontSize:16,fontWeight:'bold',color:'#555555',textAlign:'center'}} key={index} data={rowData} style={[styles.dayUsageRow,{height:questionHeight,backgroundColor:'#e0ecff'},rowData[2] == "" && {height:usageHeight,backgroundColor:'#d9fae9'}]} />
           </TouchableOpacity>
   
         ))
@@ -963,14 +1024,16 @@ const MainScreen = ({route,navigation}) =>
   const [isBackground,setIsBackground] = React.useState(true);
   const [scanButtonColor,setScanButtonColor] = React.useState('');
   const [lastUploadAddress,setLastUploadAddress] = React.useState(896);
+  const [complianceTimeString,setComplianceTimeString] = React.useState("");
   const [scanButtonOpacity,setScanButtonOpacity] = React.useState(1.0);
   const [isScanning,setIsScanning] = React.useState(false);
   const [scanStatus,setScanStatus] = React.useState("");
+  const [scanAddress,setScanAddress] = React.useState("");
   const [scanCycleActive,setScanCycleActive] = React.useState(false);
   const [lastUploadTime,setLastUploadTime] = React.useState('');
 
   const Circle = (color,size) => {return <View style={{alignSelf:'center',width:size,height:size,borderRadius:size/2,backgroundColor:color}}></View>};
-
+  console.log("Marked Dates Is "+markedDates);
   /*AsyncStorage.getItem("lastUploadAddress").then((value)=>{
     setLastUploadAddress(parseInt(value));
     console.log("The last address was "+value);
@@ -1030,7 +1093,7 @@ const MainScreen = ({route,navigation}) =>
               AsyncStorage.getItem("userDeviceInfo").then((deviceJSON)=>JSON.parse(deviceJSON)).then((deviceInfo)=>{
 
     
-    setLastUploadTime(deviceInfo.lastdatatime);
+          setLastUploadTime(deviceInfo.lastdatatime);
               */
              //var currentDeviceInfo = await JSON.parse(AsyncStorage.getItem("userDeviceInfo"));
               //setLastUploadTime(currentDate);
@@ -1039,7 +1102,10 @@ const MainScreen = ({route,navigation}) =>
               setIsUpdating(false);
               setScanCycleActive(false);
               BleManager.disconnect(peripheral.id);
-              Alert.alert("Notice","Upload Data Success. Your AVID device has been disconnected and is ready for use.");
+              Alert.alert("Notice","Upload Data Successful. Your AVID device has been disconnected and is ready for use.",[{text:"OK",onPress:()=>{var theDate = new Date();
+                console.log("Hello Dolly, Nice to See You");
+                //console.log(theDate.getMonth()+" "+(theDate.getYear()+1900));
+                updateCalendar([theDate.getMonth()+1,theDate.getYear()+1900]);}}]);
               return(["Success",0,0]);
               //Write Time
               console.log("The id for this is "+peripheral.id);
@@ -1063,6 +1129,7 @@ const MainScreen = ({route,navigation}) =>
                 if(address[0] == 0 && address[1]==0)
                 {
                   setScanStatus("Reading Device Info");
+                  setScanAddress("");
                   let complianceTime = parseInt(changeNumBase(readData[3])+changeNumBase(readData[2])+changeNumBase(readData[1])+changeNumBase(readData[0]),16);
                   var complianceHours = complianceTime/60 < 1?0:1;
                   let comTime = `${complianceHours} hrs ${complianceTime%60} min`;
@@ -1084,7 +1151,7 @@ const MainScreen = ({route,navigation}) =>
                   {
                     setScanCycleActive(false);  
                     console.log("It was rejected");
-                      const noticeString = lastUploadAddress > "4070" ? "No New Records. Device was recently reset.":"No New Records";
+                      const noticeString = lastAddressVal > 4070 ? "No New Records. Device was recently reset.":"No New Records";
                       console.log("Here Chicken");
                       
                       console.log(noticeString);
@@ -1099,6 +1166,7 @@ const MainScreen = ({route,navigation}) =>
                 {
                                  //console.log("Preset Is "+readData)
                     setScanStatus("Reading Presets");
+                    setScanAddress((256*address[0]+address[1]).toString());
                     console.log("Next Preset Address "+[address[0],address[1]+16]);
                     if((256*address[0]+address[1])%32 == 0 && 256*address[0]+address[1] != 896)
                     {
@@ -1142,7 +1210,8 @@ const MainScreen = ({route,navigation}) =>
                     console.log("Read Data Is "+readData);
                     console.log("Position Is "+(256*address[0]+address[1])+" "+lastUploadAddress);
                     console.log("LAst Time "+userDeviceInfo.lastdatatime);
-                    setScanStatus("Reading Usage Data");
+                    setScanStatus("Reading Usage Data ");
+                    setScanAddress((256*address[0]+address[1]).toString());
                     var newRecords = false;
                     //if(userDeviceInfo == "null" || !userDeviceInfo.hasOwnProperty('lastdatatime') || ((lastUsageAddress != null && (256*address[0]+address[1]).toString() >= lastUsageAddress) && userDeviceInfo.lastdatatime < convertDateStringForCompare(readData[1],readData[2],readData[3],readData[4],readData[5])))
                     //{
@@ -1180,8 +1249,9 @@ const MainScreen = ({route,navigation}) =>
                    else
                    {                           
                       
-                      console.log("Uploading Data To Server!");
+                      console.log("Uploading Data To Server! For Device "+currentUserData.serialnumber);
                       setScanStatus("Uploading Data To Server");
+                      setScanAddress("");
                       //console.log("Here we do "+lastUsageAddress);
                       
                       //return;
@@ -1288,10 +1358,10 @@ const MainScreen = ({route,navigation}) =>
                     }
                     
                    
-        }).catch((error)=>{console.log("Upload Error "+error);
+               }).catch((error)=>{Alert.alert("Notice","Upload Error - 3");console.log("Upload Error "+error);
       
-        return reject("Upload Error. Sorry");
-      });
+              return reject("Upload Error. Sorry");
+            });
                   return;
                 
                 
@@ -1309,7 +1379,7 @@ const MainScreen = ({route,navigation}) =>
       });
 
 
-    }).then((returnVal)=>{
+      }).then((returnVal)=>{
 
       switch(returnVal[0])
       {
@@ -1396,7 +1466,7 @@ const MainScreen = ({route,navigation}) =>
         var theDate = new Date();
         console.log("Hello Dolly");
         console.log(theDate.getMonth()+" "+(theDate.getYear()+1900));
-        updateCalendar([[theDate.getMonth()+1,theDate.getYear()+1900]]);
+        updateCalendar([theDate.getMonth()+1,theDate.getYear()+1900]);
         console.log("Goodbye Dolly");
         console.log("Is Updating Is "+isUpdating);
         setIsScanning(false);
@@ -1407,7 +1477,7 @@ const MainScreen = ({route,navigation}) =>
             if(result[0] == "Success")
               Alert.alert("Notice","Upload Successful! Device has been disconnected and is ready for use.");
             else 
-              Alert.alert("Notice",result[1]);
+              Alert.alert("Notice - Failure",result[1]);
           
           console.log("Things were a succes! ");
           console.log(result);
@@ -1418,16 +1488,17 @@ const MainScreen = ({route,navigation}) =>
   function updateCalendar(dayInfo)
   {
     setIsUpdating(true);
-    console.log("What is The Day "+dayInfo);
-    console.log("The Day Is "+dayInfo+" "+currentUserData);
+    console.log("What is The Day AA "+dayInfo);
+    console.log("The Day Is "+dayInfo[0]+" "+dayInfo[1]+" "+currentUserData);
     getMonthUsageData(dayInfo[0],dayInfo[1]).then((result)=>{
 
       console.log("Months Updated");
       console.log(result);
       updateMarkedDates(result);
+      console.log("The new marked dates are "+markedDates);
       setIsUpdating(false);
 
-    });
+    }).catch((error)=>{console.log("Probbbb "+error)});
   } //End updateCalendar
 
  
@@ -1454,10 +1525,19 @@ const MainScreen = ({route,navigation}) =>
     //console.log("The NAme Is "+userData.uid);
     if(!userData)
       console.log("No User Data loaded!");
+    if(!markedDates)
+    {
+        var theDate = new Date();
+        //console.log("Hello Dolly");
+        console.log("The current date is "+theDate.getMonth()+" "+(theDate.getYear()+1900));
+        updateCalendar([theDate.getMonth()+1,theDate.getYear()+1900]);
+    }
+      //console.log("There are no marked dates");
     //setCurrentUserInfo(userData);
     console.log("Cheeses1")
     setCurrentDeviceString(userData.serialnumber == ''?"No Device Paired":userData.serialnumber);
-    console.log("cheeses2 "+currentDeviceString);
+    console.log("cheeses2 "+currentDeviceString+" "+currentUserData.serialnumber);
+
     if(!scanCycleActive)
       setScanButtonColor(userData.serialnumber == ''?"#bbb":"#fff");
     if(scanStatus == "" && !scanCycleActive)
@@ -1469,9 +1549,10 @@ const MainScreen = ({route,navigation}) =>
   
   });
 
-  AsyncStorage.getItem("userDeviceInfo").then((deviceJSON)=>JSON.parse(deviceJSON)).then((deviceInfo)=>{
 
-    
+  AsyncStorage.getItem("userDeviceInfo").then((deviceJSON)=>JSON.parse(deviceJSON)).then((deviceInfo)=>{
+    console.log("Device Info Is This "+JSON.stringify(deviceInfo));
+    setComplianceTimeString(deviceInfo.lastuserdata.ConfigData.ComplianceTime);
     if(lastUploadTime=='' || lastUploadTime < deviceInfo.lastdatatime.toString())
     {
       setLastUploadTime(deviceInfo.lastdatatime);
@@ -1550,6 +1631,7 @@ return(
           <View style={styles.mainScreenModal}>
             <View style={styles.mainScreenModalView}>
           <Text style={{textAlign:'center', fontSize:25}}>{scanStatus}</Text>
+          <Text style={{textAlign:'center', fontSize:16}}>{scanAddress}</Text>
           </View>
           <ActivityIndicator animating={true}/>
           </View>
@@ -1561,8 +1643,10 @@ return(
   <View style={{flexDirection:'row'}}>{Circle("red",10)}<Text style={styles.grayButton}>&nbsp;&nbsp;All questions are answered</Text></View>
   <View style={{flexDirection:'row'}}>{Circle("pink",10)}<Text style={styles.grayButton}>&nbsp;&nbsp;Some Questions Skipped</Text></View>
   </View>
-  <Calendar hideExtraDays={true} theme={{textDayFontSize:17}} style={{height:'55%',marginBottom:'3%'}} markedDates={markedDates}  onDayPress={day=>{console.log("The Day Is "+day.dateString);if(day.dateString in markedDates){navigation.navigate("USAGE SUBSTACK",{currentDate:day.dateString,from:"calendar"});}  }} onMonthChange={month => {console.log("Month Is This"+month);/*setCurrentMonth([month.month,month.year]);*/updateCalendar([month.month,month.year]);/*setDatesUpdated(false);*/}} markingType={'multi-dot'}></Calendar>
-  <View style={{marginTop:'3%'}}>
+  <Calendar hideExtraDays={true} theme={{textDayFontSize:17}} style={{height:'55%',marginBottom:'0.5%'}} markedDates={markedDates}  onDayPress={day=>{console.log("The Day Is "+day.dateString);if(day.dateString in markedDates){navigation.navigate("USAGE SUBSTACK",{currentDate:day.dateString,from:"calendar"});}  }} onMonthChange={month => {console.log("Month Is This"+month);/*setCurrentMonth([month.month,month.year]);*/updateCalendar([month.month,month.year]);/*setDatesUpdated(false);*/}} markingType={'multi-dot'}></Calendar>
+  <View style={{marginTop:'0'}}>
+  <Text style={[styles.grayButton,{fontSize:18,alignSelf:'center'}]}>Compliance Time:{complianceTimeString}</Text>
+  
   <TouchableOpacity disabled={isScanning || scanCycleActive} alignSelf='center' onPress={()=>{Alert.alert("Prepare To Connect","Please ensure your paired AVID device is turned on and Bluetooth mode is activated",[{text:"OK",onPress:startDeviceScanButton}]);}} style={{opacity:scanButtonOpacity, alignSelf:'center', marginTop:'3%',marginBottom:'0%', backgroundColor: "#722053", width:"80%" }}><Text style={{ fontFamily: "Proxima Nova",fontWeight:'bold',color:scanButtonColor, textAlign: 'center', fontSize: 25, margin:10, }}>Sync Device Data</Text></TouchableOpacity>
   <View style={{flexDirection:'row',alignItems:'center',alignSelf:'center',marginTop:'5%'}}><View style={{alignItems:'center'}}><Text style={[styles.grayButton,{fontSize:21}]}>Current Device:</Text><Text style={[styles.grayButton,{fontSize:17}]}>{currentDeviceString}</Text></View><View style={{marginLeft:'5%'}}></View><View style={{alignItems:'center'}}><Text style={[styles.grayButton,{fontSize:21}]}>Last Upload Time:</Text><Text style={[styles.grayButton,{fontSize:17}]}>{moment(lastUploadTime,'YYYY-MM-DD').format('MMM DD, YYYY')}</Text></View></View>
   {/*<Text style={[styles.grayButton,{alignSelf:'center',fontSize:20,marginTop:'1%'}]}>Your Current Device: {currentDeviceString}</Text>
@@ -1644,12 +1728,15 @@ const LoginScreen = ({route,navigation}) =>
           });
         } //End retrieveData
 
+        AsyncStorage.setItem("username",usernameIn);
+        setUsername(usernameIn);
+
         fetch(webURLS.login,requestOptions).then((response)=>response.json()).then((responseJson)=>{
           switch(responseJson.code)
           {
             case 200:
               currentUserData = responseJson.data;
-              console.log("Egg Rolls and Rice");
+              console.log("Egg Rolls and Rice "+JSON.stringify(currentUserData));
               AsyncStorage.setItem("currentUserData",JSON.stringify(responseJson.data));
               //AsyncStorage.getItem("currentUserData").then((theData)=>{console.log("The Data Is "+theData)}).catch((error)=>{console.log("There was a problem "+error);});
               AsyncStorage.setItem("username",usernameIn);  
@@ -2075,6 +2162,7 @@ const DeviceSelection = ({route,navigation}) =>
   const [isRegistering,setIsRegistering] = React.useState(false);
   const [firstModalShowing,setFirstModalShowing] = React.useState(true);
   const [isScanningA,setIsScanningA] = React.useState(false);
+  const [registerStatus,setRegisterStatus] = React.useState("");
 
   navigation.setOptions({headerRight:()=>(<ActivityIndicator alignSelf='center' color="white" animating={isScanningA}/>)});
   if(!alertShown)
@@ -2084,6 +2172,7 @@ const DeviceSelection = ({route,navigation}) =>
     {
       BleManager.stopScan();
       setIsRegistering(true);
+      setRegisterStatus("Registering User");
       route.params.newUserInfo.serialNumber = deviceID;
 
       const newDataRequestOptions = {
@@ -2096,7 +2185,7 @@ const DeviceSelection = ({route,navigation}) =>
       };
 
       fetch(webURLS.login,newDataRequestOptions).then((response)=>response.json()).then((responseJson)=>{
-
+        setRegisterStatus("Recieved Response")
         if(responseJson.code == 200)
         {
           const loginRequestOptions = {
@@ -2105,12 +2194,15 @@ const DeviceSelection = ({route,navigation}) =>
             body: 'action=signIn&whereJson='+JSON.stringify({"username":route.params.newUserInfo.username,"password":route.params.newUserInfo.password})+'&appversion='+appVersion
           //        data:'action=signIn'+'&whereJson='+JSON.stringify({'username':username,'password':password})+'&appversion='+global.appVersion
           };
+          setRegisterStatus("Signing In");
         console.log("Point F");
         console.log("step 111");
         fetch(webURLS.login,loginRequestOptions).then((response)=>response.json()).then((responseJson)=>{
           console.log("Point G");
+          setRegisterStatus("Signed In");
           AsyncStorage.setItem("currentUserData",JSON.stringify(responseJson.data));
           auth().createUserWithEmailAndPassword(responseJson.data.email.toLowerCase(),route.params.newUserInfo.password).then((userCredential)=>{
+            setRegisterStatus("Creating Firebase Record");
             userAccountPtr.doc(route.params.newUserInfo.username).set({eMail:responseJson.data.email.toLowerCase(),md5pass:responseJson.data.PassHash});
             auth().currentUser.sendEmailVerification().then(()=>{console.log("E-mail success");return;});
             //return;
@@ -2121,10 +2213,11 @@ const DeviceSelection = ({route,navigation}) =>
           //console.log(result);
           //setIsLoading(false);
 
-          
+          setRegisterStatus("Fetching Device Info");
 
 
           fetch(webURLS.deviceList+"?action=findUsageData&SerialNumber="+currentUserData.serialnumber+"&token="+currentUserData.token).then((response)=>response.json()).then((responseJson)=>{
+            setRegisterStatus("Fetching Device Info - 1");
             console.log("Point H");
             AsyncStorage.setItem("userDeviceInfo",JSON.stringify(responseJson.data));
           userDeviceInfo = responseJson.data;  
@@ -2133,10 +2226,10 @@ const DeviceSelection = ({route,navigation}) =>
           navigation.navigate("Main",{calendarInfo:result,serialNumber:currentUserData.serialnumber});
 
 
-          });
+          }).catch((error)=>{setIsRegistering(false);Alert.alert("Notice","Error 3 "+error);console.log("There was another problem "+error);});
           
 
-        });}).catch((error)=>{console.log("Erris is "+error)});
+        }).catch((error)=>{setRegisterStatus("The issue is as follows "+error)});}).catch((error)=>{setIsRegistering(false);Alert.alert("Notice","Network Error 2");console.log("Erris is "+error)});
 
 
         });
@@ -2149,7 +2242,13 @@ const DeviceSelection = ({route,navigation}) =>
 
      
     }
-      });
+    else
+    {
+      setIsRegistering(false);
+      Alert.alert("Notice","There was an error "+responseJson.code+" "+responseJson.msg);
+      console.log("There was a registration problem "+responseJson.code+" "+responseJson.msg);
+    }
+      }).catch((error)=>{setIsRegistering(false);Alert.alert("Notice","Network Error 1 "+error);});
     }
 
     const handleSelectFoundDevice = (peripheral) => {
@@ -2213,6 +2312,9 @@ const DeviceSelection = ({route,navigation}) =>
        
         
         <TouchableOpacity onPress={()=>{BleManager.scan([],scanTimeout,false);setIsScanningA(true)}} style={{alignSelf:'center',marginTop:'8%',width:'80%',borderWidth:2,backgroundColor:avidPurpleHex,borderColor:avidPurpleHex}}><Text style={{padding:'4%',alignSelf:'center', fontSize:20,fontWeight:'bold',color:'white'}}>Scan For Nearby Devices</Text></TouchableOpacity>
+        <Text style={{textAlign:'center'}}>{registerStatus}</Text>
+        
+      
       <View>
         {deviceList}
         </View>
