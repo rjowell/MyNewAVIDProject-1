@@ -19,7 +19,7 @@ import moment, { now } from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import analytics from '@react-native-firebase/analytics';
-import auth from '@react-native-firebase/auth';
+import auth, {sendPasswordResetEmail} from '@react-native-firebase/auth';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import notifee, { EventType } from '@notifee/react-native';
 
@@ -308,6 +308,15 @@ const webURLS = {
   login: "https://avid.vqconnect.io/nodejs/login",
   deviceList: "https://avid.vqconnect.io/nodejs/deviceList",
   userList: "https://avid.vqconnect.io/nodejs/userList"
+}
+
+const firebseErrorMessages = 
+{
+  wrongPassword: "auth/wrong-password",
+  emailInUse: "auth/email-already-in-use",
+  invalidEmail: "auth/invalid-email",
+  userNotFound: "auth/user-not-found"
+
 }
 
 const bluetoothIDs = {
@@ -651,13 +660,18 @@ const DayUsageScreen = ({ route, navigation }) => {
 
   var usageData = null;
   var tableInfo = [];
+  var finalUsageData = [];
+  var finalAddresses = [];
 
   fetch(webURLS.userList + "?action=findUserUsageDataByDay&dayTime=" + route.params.currentDate + "&uid=" + currentUserData.uid + "&token=" + currentUserData.token).then((response) => response.json()).then((responseJson) => {
     usageData = responseJson.data;
+    console.log("Info is Here");
+    console.log(usageData);
     //console.log("Information "+JSON.stringify(usageData));
     for (var x = 0; x < responseJson.data.length; x++) {
       console.log("User Data Is " + responseJson.data[x].uid + " " + currentUserData.uid);
       var currentObj = [];
+      //currentObj.push(responseJson.data[x].Type);
       currentObj.push(" " + responseJson.data[x].DateOfTreatment.substring(0, 13));
       var ampm = ""
       var currentTime = ""
@@ -689,11 +703,20 @@ const DayUsageScreen = ({ route, navigation }) => {
       console.log("Horses " + currentObj + " " + tableInfo.includes([currentObj[0], currentObj[1], currentObj[2], currentObj[3]]));
 
       if (tableInfo.length == 0)
-        tableInfo.push(currentObj)
+      {
+        tableInfo.push(currentObj);
+        if(!finalAddresses.includes(responseJson.data[x].Address))
+        {
+          finalUsageData.push(responseJson.data[x]);
+          finalAddresses.push(responseJson.data[x].Address);
+        }
+        
+      }
       else {
         var itemExists = false;
         for (var i = 0; i < tableInfo.length; i++) {
           if (JSON.stringify(tableInfo[i]) == JSON.stringify(currentObj)) {
+            //usageData.splice(x,1);
             itemExists = true;
             break;
           }
@@ -701,6 +724,11 @@ const DayUsageScreen = ({ route, navigation }) => {
         }
         if (!itemExists)
           tableInfo.push(currentObj);
+          if(!finalAddresses.includes(responseJson.data[x].Address))
+          {
+            finalUsageData.push(responseJson.data[x]);
+            finalAddresses.push(responseJson.data[x].Address);
+          }
       }
       /*
       if(!tableInfo.includes(currentObj))
@@ -758,7 +786,7 @@ const DayUsageScreen = ({ route, navigation }) => {
         {
           tableData.map((rowData, index) => (
 
-            <TouchableOpacity buttonKey={index} onPress={() => { var boolVal; if (rowData[2] == "") { boolVal = false; } else { boolVal = true; } navigation.navigate("Usage Data Detail", { dataObject: usageData[index], isUsage: boolVal }); }}>
+            <TouchableOpacity buttonKey={index} onPress={() => { console.log(finalUsageData[index].Type+"--"+rowData[2]+" "+index);var boolVal; if (finalUsageData[index].Type == "U") { boolVal = true; } else { boolVal = false; } console.log("Paper "+JSON.stringify(finalUsageData[index])); navigation.navigate("Usage Data Detail", { dataObject: finalUsageData[index], isUsage: boolVal }); }}>
               <Row widthArr={widthArray} textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} key={index} data={rowData} style={[styles.dayUsageRow, { height: questionHeight, backgroundColor: '#e0ecff' }, rowData[2] == "" && { height: usageHeight, backgroundColor: '#d9fae9' }]} />
             </TouchableOpacity>
 
@@ -1144,7 +1172,8 @@ function updateDeviceTime(peripheral)
                     setScanStatus("Reading Device Info");
                     setScanAddress("");
                     let complianceTime = parseInt(changeNumBase(readData[3]) + changeNumBase(readData[2]) + changeNumBase(readData[1]) + changeNumBase(readData[0]), 16);
-                    var complianceHours = complianceTime / 60 < 1 ? 0 : 1;
+                    //var complianceHours = complianceTime / 60 < 1 ? 0 : 1;
+                    var complianceHours = Math.floor(complianceTime/60);
                     let comTime = `${complianceHours} hrs ${complianceTime % 60} min`;
                     
                     try
@@ -1736,6 +1765,7 @@ const LoginScreen = ({ route, navigation }) =>
 
   function finishLogin(usernameIn, passwordIn, requestOptions) {
     function retrieveData() {
+      console.log(currentUserData);
       setLoginProcessStatus("Fetching Usage Data");
       fetch(webURLS.deviceList + "?action=findUsageData&SerialNumber=" + currentUserData.serialnumber + "&token=" + currentUserData.token).then((response) => response.json()).then((responseJson) => {
         userDeviceInfo = responseJson.data.status == 2 ? responseJson.data : "null";
@@ -1815,8 +1845,34 @@ const LoginScreen = ({ route, navigation }) =>
 
         case 203:
           setIsLoading(false);
+          console.log("Hello Jackson");
           setLoginProcessStatus("");
-          Alert.alert("Login Error", "Password Incorrect");
+          if(auth().currentUser)
+          {
+            console.log(responseJson);
+            console.log("aabbvv "+auth().currentUser.email+" "+passwordIn);
+            updatePassword(auth().currentUser.email,passwordIn,false).then(()=>{
+              console.log("12345--")
+              var requestOptions = {
+                method: 'POST',
+                headers: new Headers({ 'Content-Type': contentTypeString }),
+                body: 'action=signIn&whereJson=' + JSON.stringify({ "username": usernameIn, "password": passwordIn}) + '&appversion=' + appVersion
+                //        data:'action=signIn'+'&whereJson='+JSON.stringify({'username':username,'password':password})+'&appversion='+global.appVersion
+              };
+
+              fetch(webURLS.login,requestOptions).then((response) => response.json()).then((responseJson) => {
+                currentUserData=responseJson.data;
+                AsyncStorage.setItem("currentUserData", JSON.stringify(responseJson.data));
+                //AsyncStorage.getItem("currentUserData").then((theData)=>{console.log("The Data Is "+theData)}).catch((error)=>{console.log("There was a problem "+error);});
+                AsyncStorage.setItem("username", usernameIn);
+                retrieveData();
+              });
+
+
+            }).catch((error)=>{})
+          }
+          else
+            Alert.alert("Login Error", "Password Incorrect");
           break;
 
         case 205:
@@ -1844,6 +1900,53 @@ const LoginScreen = ({ route, navigation }) =>
   } //End finishLogin
 
 
+  async function newProcessLogin(usernameInput,passwordInput)
+  {
+    if (auth().currentUser)
+      await auth().signOut();
+    var requestOptions;
+
+    userAccountPtr.doc(usernameIn.toLowerCase()).get().then((document) => {
+      if (document.exists) {
+        console.log("Step 4")
+        auth().signInWithEmailAndPassword(document.data().eMail, passwordIn).then((userCredential) => {
+          console.log("Step 8 " + document.data().md5pass + " " + appVersion);
+          requestOptions = {
+            method: 'POST',
+            headers: new Headers({ 'Content-Type': contentTypeString }),
+            body: 'action=signIn&whereJson=' + JSON.stringify({ "username": usernameInput, "md5password": document.data().md5pass, "password": "NULL" }) + '&appversion=' + appVersion
+            //        data:'action=signIn'+'&whereJson='+JSON.stringify({'username':username,'password':password})+'&appversion='+global.appVersion
+          };
+          console.log("Step 5");
+          finishLogin(usernameInput, passwordInput, requestOptions);
+
+        }).catch(error => {
+          console.log(error.code);
+          setLoginProcessStatus("");
+          if (error.code == firebseErrorMessages.wrongPassword) {
+            setIsLoading(false);
+            Alert.alert("Login Error", "Password Incorrect");
+            return;
+          }
+
+
+        });
+      }
+      else {
+        console.log("Doesnt exist");
+        requestOptions = {
+          method: 'POST',
+          headers: new Headers({ 'Content-Type': contentTypeString }),
+          body: 'action=signIn&whereJson=' + JSON.stringify({ "username": usernameIn, "password": passwordIn }) + '&appversion=' + appVersion
+        };
+        finishLogin(usernameInput, passwordInput, requestOptions);
+      }
+    });
+
+
+  }
+
+
   async function processLogin(usernameIn, passwordIn) {
     if (auth().currentUser)
       await auth().signOut();
@@ -1868,7 +1971,7 @@ const LoginScreen = ({ route, navigation }) =>
         }).catch(error => {
           console.log(error.code);
           setLoginProcessStatus("");
-          if (error.code == "auth/wrong-password") {
+          if (error.code == firebseErrorMessages.wrongPassword) {
             setIsLoading(false);
             Alert.alert("Login Error", "Password Incorrect");
             return;
@@ -1995,6 +2098,47 @@ const UsageDetailScreen = ({ route, navigation }) => {
   );
 } //End UsageDetailScreen
 
+
+function updatePassword(email,password,fromForgot)
+  {
+    return new Promise((resolve,reject)=>{
+    
+    console.log("yuup "+email+" "+password);
+    const requestOptions = {
+
+      method: 'POST',
+      headers: new Headers({ 'Content-Type': contentTypeString }),
+      body: 'action=changepassword&whereJson=' + JSON.stringify({ "email": email, "password": password }) + '&appversion=' + appVersion
+      //        data:'action=signIn'+'&whereJson='+JSON.stringify({'username':username,'password':password})+'&appversion='+global.appVersion
+
+
+    };
+
+    fetch(webURLS.login, requestOptions).then((response) => response.json()).then((responseJson) => {
+
+      if (responseJson.code == 200) {
+        if(fromForgot)
+          Alert.alert("Success", "Password Successfully Updated.", [{ text: "OK", onPress: () => { } }]);
+        //Alert.alert("E-mail Not Verified","Please check your e-mail to verify your account",[{text:'Resend E-mail',onPress:()=>{userCredential.user.sendEmailVerification();}},{text:"OK"}]);
+        console.log("Password Success!");
+        resolve("success");
+        //setPasswordStatus("Password Successfully Changed");
+      }
+      else {
+        Alert.alert("Error", "There was an error resetting your password.");
+        console.log("Password Fail");
+        reject("fail");
+        //setPasswordStatus("User Not Found!");
+      }
+
+    }).catch((error)=>{
+      Alert.alert("Notice","Network Error "+error.msg);
+      reject("Fail");
+    });;
+
+  });
+  }
+
 const ForgotPasswordScreen = ({ route, navigation }) => {
   const [emailInput, setEmailInput] = React.useState("");
   const [buttonPressed, setButtonPressed] = React.useState(false);
@@ -2004,18 +2148,61 @@ const ForgotPasswordScreen = ({ route, navigation }) => {
 
   const confirmPassRef = useRef();
 
+  function newResetPassword(emailInput)
+  {
+    auth.signInWithEmailAndPassword(emailInput,"testps").then((result)=>{}).catch((error)=>{
+      if(error.code == firebseErrorMessages.emailInUse)
+      {
+        //Send PW Reset E-mail
+        auth.sendPasswordResetEmail(emailInput);
+        Alert.alert("Password Reset E-mail Sent","Please check your e-mail to reset your password");
+        return;
+      }
+      else if (error.code == firebseErrorMessages.invalidEmail)
+        Alert.alert("Error", "Invalid E-mail format");
+      else if(error.code == firebseErrorMessages.wrongPassword)
+      {
+        const requestOptions = {
+
+          method: 'POST',
+          headers: new Headers({ 'Content-Type': contentTypeString }),
+          body: 'action=findEmail&whereJson=' + JSON.stringify({ "email": emailInput }) + '&appversion=' + appVersion
+          //        data:'action=signIn'+'&whereJson='+JSON.stringify({'username':username,'password':password})+'&appversion='+global.appVersion
+
+        };
+
+        fetch(webURLS.login, requestOptions).then((response) => response.json()).then((responseJson) => {
+          if (responseJson.code == "200")
+            setButtonPressed(true);
+          else
+            Alert.alert("E-mail Error", "E-mail not found");
+        }).catch((error) => {
+
+          if (error.name == "SyntaxError") {
+            Alert.alert("Network Error", "Please Try Again");
+            return;
+          }
+        });
+      }
+    })
+  }
+
   function resetPassword(eMailInput) {
+    console.log(eMailInput+" "+auth());
+    //auth().sendPasswordResetEmail("russ.jowell@gmail.com").then(()=>{console.log("succes");}).catch((error)=>{console.log("Problem "+error)});
     if (eMailInput == "") {
       Alert.alert("E-mail Error", "E-mail field is blank");
       return;
     }
-
-    auth().signInWithEmailAndPassword(eMailInput, "tespw").then((result) => { console.log("success!!"); }).catch((error) => {
-
-      if (error.code == "auth/invalid-email")
-        Alert.alert("Error", "Invalid E-mail format");
-
-      if (error.code == "auth/wrong-password") {
+    console.log("Cheetos");
+    auth().fetchSignInMethodsForEmail(eMailInput).then((result)=>{
+      
+      if(result.length != 0)
+      {
+        auth().sendPasswordResetEmail(eMailInput).then(()=>{console.log("success-yayayyy");Alert.alert("Password Reset E-mail Sent","Please check your e-mail to reset your password");}).catch((error)=>{console.log("E-mail Error "+error);});
+      }
+      else
+      {
         const requestOptions = {
 
           method: 'POST',
@@ -2038,10 +2225,65 @@ const ForgotPasswordScreen = ({ route, navigation }) => {
           }
         });
       }
+      
+      console.log(result.length)}).catch((error)=>{Alert.alert("Error","Invalid E-mail format");});
+    /*auth().signInWithEmailAndPassword(eMailInput, "tespw").then((result) => { console.log("success!!"); }).catch((error) => {
+      console.log("We did it");
+      
+      console.log(error.code);
+      if(error.code == "auth/too-many-requests")
+        Alert.alert("Network Error","Please Try Again ");
+      else if(error.code == firebseErrorMessages.emailInUse)
+      {
+        //Send PW Reset E-mail
+        console.log("cheese "+eMailInput+" "+auth().currentUser);
+        console.log(this.auth());
+        //auth().sendPasswordResetEmail()
+        this.auth().sendPasswordResetEmail(eMailInput).then(()=>{console.log("success-yay");Alert.alert("Password Reset E-mail Sent","Please check your e-mail to reset your password");}).catch((error)=>{console.log("E-mail Error "+error);});
+        
+        //return;
+      }
+      else if(error.code == firebseErrorMessages.invalidEmail)
+        Alert.alert("Error", "Invalid E-mail format");
+
+      else if(error.code == firebseErrorMessages.userNotFound) {
+        const requestOptions = {
+
+          method: 'POST',
+          headers: new Headers({ 'Content-Type': contentTypeString }),
+          body: 'action=findEmail&whereJson=' + JSON.stringify({ "email": eMailInput }) + '&appversion=' + appVersion
+          //        data:'action=signIn'+'&whereJson='+JSON.stringify({'username':username,'password':password})+'&appversion='+global.appVersion
+
+        };
+
+        fetch(webURLS.login, requestOptions).then((response) => response.json()).then((responseJson) => {
+          if (responseJson.code == "200")
+            setButtonPressed(true);
+          else
+            Alert.alert("E-mail Error", "E-mail not found");
+        }).catch((error) => {
+
+          if (error.name == "SyntaxError") {
+            Alert.alert("Network Error", "Please Try Again");
+            return;
+          }
+        });
+      }
+      else
+      {
+        //Send PW Reset E-mail
+        console.log("cheese");
+        auth.sendPasswordResetEmail(emailInput);
+        Alert.alert("Password Reset E-mail Sent","Please check your e-mail to reset your password");
+        return;
+      }
 
 
-    })
+    })*/
   }//End resetPassword function
+
+
+  
 
   function processPassword() {
     console.log("cheesey");
@@ -2065,6 +2307,10 @@ const ForgotPasswordScreen = ({ route, navigation }) => {
       return;
     }
     console.log("PArt 55");
+    
+    
+    updatePassword(emailInput,passwordEntry,true).then(()=>{navigation.navigate("Login")}).catch((error)=>{Alert.alert("Notice","Error Updating Password");})
+    /*
     const requestOptions = {
 
       method: 'POST',
@@ -2089,7 +2335,7 @@ const ForgotPasswordScreen = ({ route, navigation }) => {
         //setPasswordStatus("User Not Found!");
       }
 
-    });
+    });*/
 
 
 
