@@ -11,10 +11,10 @@ import React, { useRef } from 'react';
 import { NavigationContainer, CommonActions, useNavigation } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Calendar } from 'react-native-calendars';
-import DeviceInfo from 'react-native-device-info';
+//import DeviceInfo from 'react-native-device-info';
 import { createStackNavigator } from '@react-navigation/stack';
 import BleManager from 'react-native-ble-manager';
-import { Table, TableWrapper, Row, Rows, Col, Cols, Cell } from 'react-native-table-component';
+import { Table, Row } from 'react-native-table-component';
 import moment, { now } from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
@@ -23,30 +23,32 @@ import auth, {sendPasswordResetEmail} from '@react-native-firebase/auth';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import notifee, { EventType } from '@notifee/react-native';
 
+
+
 import {
   Alert,
   ActivityIndicator,
-  AppRegistry,
+ 
   Dimensions,
-  SafeAreaView,
+  
   ScrollView,
-  StatusBar,
+ 
   StyleSheet,
   Text,
   Pressable,
   Modal,
   TextInput,
-  Button,
+  
   TouchableOpacity,
-  KeyboardAvoidingView,
+  
   Keyboard,
   NativeModules,
   NativeEventEmitter,
   TouchableWithoutFeedback,
   Image,
-  useColorScheme,
+  
   View,
-  requireNativeComponent,
+  
   TouchableHighlight,
 } from 'react-native';
 
@@ -63,8 +65,8 @@ const scanTimeout = 8;
 // use let or const instead of var
 var usageArray = [];
 var masterPresetArray = [];
-var answers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'N', 'Y', 'NA', 'S', 'default'];
-var appVersion = '1.1.0';
+const answers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'N', 'Y', 'NA', 'S', 'default'];
+const appVersion = '1.1.0';
 var usageCount = 0;
 var questionCount = 0;
 
@@ -215,6 +217,13 @@ const styles = StyleSheet.create({
     marginBottom: '3%'
 
   },
+  usageScreenLabels:
+  {
+    fontSize:13,
+    fontWeight:'bold',
+    textAlign:'center',
+    color:'#555555'
+  },
 
   forgotLabels:
   {
@@ -261,7 +270,7 @@ function generateDateTimeString(year, month, day, hour, minute) {
 function calculation(add_0, add_1) {
   return parseInt((changeNumBase(add_1) + changeNumBase(add_0)), 16);
 }
-
+/*
 function convertDateStringForCompare(year, month, day, hour, minute) {
   //2023-05-12 05:35
   var returnString = "";
@@ -302,7 +311,7 @@ function showNotification(titleInput, bodyInput) {
   });
 
 }
-
+*/
 
 const webURLS = {
   login: "https://avid.vqconnect.io/nodejs/login",
@@ -340,10 +349,11 @@ function compareProperty({ key, direction }) {
 function getMonthUsageData(month, year) {
   return new Promise(function (resolve, reject) {
     const usageOver20 = { key: 'over20', color: 'green' };
+    /*
     const usageUnder20 = { key: 'under20', color: 'purple' };
     const allQuestionsAnswered = { key: 'allAnswered', color: 'red' };
     const skippedQuestions = { key: 'skippedQuestions', color: 'pink' };
-
+    */
     var dataObject = {};
     const monthDays = ["31", "28", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"];
     if (year % 4 == 0)
@@ -435,34 +445,6 @@ const App = ({ navigation }) => {
     BleManager.start();
 
 
-    /*
-    AsyncStorage.getItem("currentUserData").then((userResponse)=>JSON.parse(userResponse)).then((userData)=>{
-      if(!userData)
-      { 
-        console.log("There is no user data. Sucks!!");
-        setNextScreenID("Login");
-        return;
-      }
-      console.log("Clowns "+userData);
-      const requestOptions = {
-        method:'POST',
-        headers: new Headers({'Content-Type': contentTypeString}),
-        body: 'action=verifyToken&token='+userData.token
-        //data:'action=signIn'+'&whereJson='+JSON.stringify({'username':username,'password':password})+'&appversion='+global.appVersion
-      };
-      // fetch(webURLS.login,logoutRequestOptions).then((response)=>response.json()).then((responseJson)=>{
-        console.log("The User Token Isss "+userData.token);
-      fetch(webURLS.login,requestOptions).then((response)=>response.json()).then((responseJson)=>{
-        console.log("Response was this "+responseJson.code);
-        //if(responseJson.code == 100)
-        //{
-          console.log("Didn't work again");
-          //navigation.navigate("LOGIN");
-          setNextScreenID("Main");
-        //}
-          
-        //if(responseJson.code)
-      });});*/
 
   }, [nextScreenID, setNextScreenID]);
   //if(auth().currentUser)
@@ -481,6 +463,7 @@ const App = ({ navigation }) => {
     console.log("Cal Data Is " + JSON.stringify(calendarData));
     console.log("Ussss Data " + currentUserData);
     return (<Drawer.Navigator initialRouteName='HOME' screenOptions={{ drawerActiveTintColor: 'white', drawerInactiveTintColor: 'white', drawerStyle: { drawerActiveTintColor: 'yellow', backgroundColor: avidPurpleHex } }}>
+      
       <Drawer.Screen name="HOME" component={MainScreen} initialParams={{ calendarInfo: calendarData, serialNumber: serialNumberInput, from: fromInput }} />
       <Drawer.Screen name="USAGE SUBSTACK" component={UsageHistoryStack} options={{ drawerItemStyle: { display: "none" }, unmountOnBlur: true, headerShown: false }} />
       <Drawer.Screen name="LOGOUT" component={LogoutStack} />
@@ -614,6 +597,8 @@ const App = ({ navigation }) => {
       <NavigationContainer>
         <Stack.Navigator initialRouteName={nextScreen}>
           <Stack.Screen name="Login" component={LoginScreen} options={{ unmountOnBlur: true, headerShown: false }} />
+          <Stack.Screen name="usageScreenTest" component={UsageScreenTest} options={{headerStyle: { backgroundColor: avidPurpleHex },title:"Feb. 8, 2024",headerShown:true}}/>
+          <Stack.Screen name="GRAPH" component={GraphTestScreen}/>
           <Stack.Screen name="Forgot Username" component={ForgotUsernameScreen} options={{ headerStyle: { backgroundColor: avidPurpleHex }, headerTintColor: 'white', backgroundColor: 'white' }} />
           <Stack.Screen name="Forgot Password" component={ForgotPasswordScreen} options={{ headerStyle: { backgroundColor: avidPurpleHex }, headerTintColor: 'white', backgroundColor: 'white' }} />
           <Stack.Screen name="Sign Up" component={SignupScreen} options={{ headerStyle: { backgroundColor: avidPurpleHex }, headerTintColor: 'white', backgroundColor: 'white' }} />
@@ -629,8 +614,10 @@ const App = ({ navigation }) => {
   else {
     return (
       <NavigationContainer>
+        {/*<Stack.Navigator initialRouteName={nextScreen}>*/}
         <Stack.Navigator initialRouteName={nextScreen}>
           <Stack.Screen name="Login" component={LoginScreen} options={{ unmountOnBlur: true, headerShown: false }} />
+          <Stack.Screen name="GRAPH" component={GraphTestScreen}/>
           <Stack.Screen name="Forgot Username" component={ForgotUsernameScreen} options={{ headerStyle: { backgroundColor: avidPurpleHex }, headerTintColor: 'white', backgroundColor: 'white' }} />
           <Stack.Screen name="Forgot Password" component={ForgotPasswordScreen} options={{ headerStyle: { backgroundColor: avidPurpleHex }, headerTintColor: 'white', backgroundColor: 'white' }} />
           <Stack.Screen name="Sign Up" component={SignupScreen} options={{ headerStyle: { backgroundColor: avidPurpleHex }, headerTintColor: 'white', backgroundColor: 'white' }} />
@@ -644,12 +631,58 @@ const App = ({ navigation }) => {
 
 }
 
+const UsageScreenTest = ({route,navigation}) =>
+{
+  const widthArray = [Dimensions.get('screen').width * 0.4, Dimensions.get('screen').width * 0.3, Dimensions.get('screen').width * 0.2, Dimensions.get('screen').width * 0.1];
+
+  
+  return(
+    <Table>
+      <Row textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} widthArr={widthArray} data={["Time", "Preset#", ""]}></Row>
+      <Row widthArr={widthArray} textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} key={"test"} data={["2:40","1"]} style={[styles.dayUsageRow, { height: 40, backgroundColor: '#e0ecff' }]} />
+      <Row widthArr={widthArray} textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} key={"test"} data={["10:43","11"]} style={[styles.dayUsageRow, { height: 40, backgroundColor: '#e0ecff' }]} />
+
+     </Table>
+  )
+}
+
+const GraphTestScreen = ({route,navigation}) => {
+
+  
+  navigation.setOptions({ headerStyle: { backgroundColor: avidPurpleHex }, headerTintColor: 'white', headerTitle: "Feb. 7, 2024 - 10:43 am" });
+
+  
+  return(
+    <View style={{flex:1}}>
+      <View style={{flex:1,height:50}}>
+      <Text style={[styles.dayUsageRow,{backgroundColor:''}]}>INITIAL QUESTIONS</Text>
+      <Text>Pain Before Treatment: 8</Text>
+      <Text>  </Text>
+      <Text style={[styles.dayUsageRow,{backgroundColor:''}]}>USAGE</Text>
+      <Text>Preset: 11</Text>
+      <Text>Minutes Of Use: 10</Text>
+      <Text>Amplitude (Ch. 2 max): 7</Text>
+      <Text>   </Text>
+      <Text style={[styles.dayUsageRow,{backgroundColor:''}]}>FINAL QUESTIONS</Text>
+      <Text>Pain After Treatement: 4</Text>
+      
+      
+      </View>
+    </View>
+  )
+
+}
+
 const DayUsageScreen = ({ route, navigation }) => {
+  console.log("The Point");
+  console.log(route.params);
   const [tableData, setTableData] = React.useState([[]]);
   const [dataLoaded, setDataLoaded] = React.useState(false);
-  const [date, setDate] = React.useState("");
+  const [beforeQs,setBeforeQs] = React.useState([]);
+  const [afterQs,setAfterQs] = React.useState([]);
+  //const [date, setDate] = React.useState("");
   const [questionHeight, setQuestionHeight] = React.useState(40);
-  const [usageHeight, setUsageHeight] = React.useState(40);
+  //const [usageHeight, setUsageHeight] = React.useState(40);
 
   const [usageBtnTxtClr, setUsageBtnTxtClr] = React.useState('#555555');
   const [usageBtnBkgrndClr, setUsageBtnBkgrndClr] = React.useState('white');
@@ -659,89 +692,154 @@ const DayUsageScreen = ({ route, navigation }) => {
   const [allBtnTxtClr, setAllBtnTxtClr] = React.useState('white');
 
   var usageData = null;
-  var tableInfo = [];
-  var finalUsageData = [];
-  var finalAddresses = [];
+  //var tableInfo = [];
+  var newTableInfo = [];
+  //var finalUsageData = [];
+  //var finalAddresses = [];
+  var treatmentList = [];
+  var currentTreatment;
+  console.log(dataLoaded);
+
+  class Treatment
+  {
+    constructor()
+    { 
+      this.initialQuestions = {};
+      this.treatments = [];
+      this.finalQuestions = {};
+    }
+  }
+  //DecrMeds,HelpHome,HelpWork,PainAfter,PainBefore
+  var beforeQuestions = [];
+  var afterQuestions = [];
+  var usageArray = [];
 
   fetch(webURLS.userList + "?action=findUserUsageDataByDay&dayTime=" + route.params.currentDate + "&uid=" + currentUserData.uid + "&token=" + currentUserData.token).then((response) => response.json()).then((responseJson) => {
-    usageData = responseJson.data;
+    usageData = responseJson.data.sort(function(a,b){
+      return ((a["Address"]<b["Address"])? -1:((a["Address"]>b["Address"])?1:0));
+    });
     console.log("Info is Here");
-    console.log(usageData);
-    //console.log("Information "+JSON.stringify(usageData));
-    for (var x = 0; x < responseJson.data.length; x++) {
-      console.log("User Data Is " + responseJson.data[x].uid + " " + currentUserData.uid);
-      var currentObj = [];
-      //currentObj.push(responseJson.data[x].Type);
-      currentObj.push(" " + responseJson.data[x].DateOfTreatment.substring(0, 13));
-      var ampm = ""
-      var currentTime = ""
+    console.log(usageData[x]);
 
-      if (parseInt(responseJson.data[x].StandardTimeOfTreatment.substring(11, 13)) > 12) {
-        currentTime += parseInt(responseJson.data[x].StandardTimeOfTreatment.substring(11, 13)) - 12;
-        ampm = "PM";
-      }
-      else {
-        currentTime += parseInt(responseJson.data[x].StandardTimeOfTreatment.substring(11, 13));
-        ampm = "AM";
-      }
-      currentTime += ":";
-      currentTime += responseJson.data[x].StandardTimeOfTreatment.substring(14, 16) + " " + ampm;
-      //console.log("Hours Are "+responseJson.data[x].StandardTimeOfTreatment.substring(11,13))
-      //currentObj.push(responseJson.data[x].StandardTimeOfTreatment.substring(10,16));
-      currentObj.push(currentTime);
-      if (responseJson.data[x].Type == "U") {
-        currentObj.push(responseJson.data[x].PresetNumber);
-        //currentObj.push(responseJson.data[x].MinOfUse);
-      }
-      else {
-        currentObj.push("");
-        //currentObj.push("");
-      }
-      currentObj.push(">");
-      //var currentElement = <Row data={["A","B"]} style={{backgroundColor:currentColor}}></Row>
-      console.log("This thing is " + currentObj);
-      console.log("Horses " + currentObj + " " + tableInfo.includes([currentObj[0], currentObj[1], currentObj[2], currentObj[3]]));
-
-      if (tableInfo.length == 0)
+    for(var x=0;x<usageData.length;x++)
+    {
+      if(usageData[x].hasOwnProperty("PainBefore"))
       {
-        tableInfo.push(currentObj);
-        if(!finalAddresses.includes(responseJson.data[x].Address))
+        if(beforeQuestions.length == 0)
         {
-          finalUsageData.push(responseJson.data[x]);
-          finalAddresses.push(responseJson.data[x].Address);
+          beforeQuestions.push(usageData[x].DecrMeds);
+          beforeQuestions.push(usageData[x].HelpHome);
+          beforeQuestions.push(usageData[x].HelpWork);
+          beforeQuestions.push(usageData[x].PainAfter);
+          beforeQuestions.push(usageData[x].PainBefore);
+        }
+        else
+        {
+          afterQuestions.push(usageData[x].DecrMeds);
+          afterQuestions.push(usageData[x].HelpHome);
+          afterQuestions.push(usageData[x].HelpWork);
+          afterQuestions.push(usageData[x].PainAfter);
+          afterQuestions.push(usageData[x].PainBefore);
         }
         
       }
-      else {
+      else
+      {
+        console.log("Preset Info is Here");
+        console.log(usageData[x]);
+        console.log("Treatment Time");
+        console.log(usageData[x].TimeOfTreatment);
+        if(x == 0)
+        {
+          console.log("Horseees");
+          usageArray.push([usageData[x].TimeOfTreatment,usageData[x].PresetNumber,usageData[x].PresetData.NextPresetToUse,usageData[x].Channel2MaxAmpUsed,parseInt(usageData[x].MinOfUse)]);
+        }
+        else
+        {
+          if(usageData[x-1].hasOwnProperty("PresetData") && usageData[x].PresetNumber == usageData[x-1].PresetData.NextPresetToUse)
+          {
+            var currentMins = parseInt(usageArray[usageArray.length - 1][4]);
+            usageArray[usageArray.length - 1][4] = currentMins+parseInt(usageData[x].MinOfUse)
+           
+            //+= parseInt(usageData[x].MinOfUse);
+          }
+          else
+          {
+            console.log("Candies");
+            console.log(usageData[x]);
+            usageArray.push([usageData[x].TimeOfTreatment,usageData[x].PresetNumber,usageData[x].PresetData.NextPresetToUse,usageData[x].Channel2MaxAmpUsed,usageData[x].MinOfUse]);
+          }
+        }
+      
+      }
+      console.log("Final Stuff Is HEre");
+      console.log(beforeQuestions);
+      console.log(usageArray);
+      console.log(afterQuestions);
+    
+      
+      
+      /*
+      if(usageData[x].hasOwnProperty("PainAfter") && usageData[x].PainAfter != "default")
+      {
+        currentTreatment.finalQuestions = usageData[x];
+        treatmentList.push(currentTreatment);
         var itemExists = false;
-        for (var i = 0; i < tableInfo.length; i++) {
-          if (JSON.stringify(tableInfo[i]) == JSON.stringify(currentObj)) {
-            //usageData.splice(x,1);
+        for(var y = 0;y<treatmentList.length;y++)
+        {
+          if(treatmentList[y][0] == usageData[x+1].TimeOfTreatment)
+          {
             itemExists = true;
             break;
           }
-          //console.log(JSON.stringify(tableInfo[i])==JSON.stringify(currentObj));
         }
-        if (!itemExists)
-          tableInfo.push(currentObj);
-          if(!finalAddresses.includes(responseJson.data[x].Address))
-          {
-            finalUsageData.push(responseJson.data[x]);
-            finalAddresses.push(responseJson.data[x].Address);
-          }
+      
+      
+        if(!itemExists )
+          newTableInfo.unshift([usageData[x+1].TimeOfTreatment,usageData[x+1].PresetNumber,">"]);
+        //currentTreatment = new Treatment();
       }
-      /*
-      if(!tableInfo.includes(currentObj))
-        tableInfo.push(currentObj);
-      console.log("Sponge"+currentObj==tableInfo[0]);*/
+      else if(usageData[x].hasOwnProperty("PainBefore") && usageData[x].PainBefore != "default")
+      {
+        currentTreatment = new Treatment();
+        currentTreatment.initialQuestions = usageData[x];
+      }
+      else
+      {
+        var itemExists = false;
+        for(var z = 0;z<currentTreatment.treatments.length;z++)
+        {
+          if(currentTreatment.treatments[z].TimeOfTreatment == usageData[x].TimeOfTreatment)
+          {
+            itemExists = true;
+            break;
+          }
+        }
+        if(!itemExists)
+          currentTreatment.treatments.push(usageData[x]);
+      }
+      */
+
+      
+
     }
+
+    
+    console.log("The Stuff "+JSON.stringify(treatmentList));
+    //console.log("Information "+JSON.stringify(usageData));
+   
+    console.log(dataLoaded);
     if (dataLoaded == false) {
+      //console.log("Boogers"+treatmentList.treatments+" "+dataLoaded);
+      setBeforeQs(beforeQuestions);
+      setAfterQs(afterQuestions);
+      setTableData(usageArray);
       setDataLoaded(true);
-      setTableData(tableInfo);
+      console.log("Snots  "+tableData+" "+dataLoaded);
     }
 
   });
-
+  /*
   function setButtons(sender) {
     if (sender == "Usage") {
       setAllBtnBkgrndClr("white");
@@ -769,10 +867,34 @@ const DayUsageScreen = ({ route, navigation }) => {
       setUsageBtnTxtClr("#555555");
     }
   }
+*/
 
+  const widthArray = [Dimensions.get('screen').width * 0.25, Dimensions.get('screen').width * 0.25, Dimensions.get('screen').width * 0.25, Dimensions.get('screen').width * 0.25];
 
-  const widthArray = [Dimensions.get('screen').width * 0.4, Dimensions.get('screen').width * 0.3, Dimensions.get('screen').width * 0.2, Dimensions.get('screen').width * 0.1];
+  return(
+  <View>
+    <Text style={{paddingTop:'2%',fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Pain Level BEFORE Treatment: {beforeQs[4]}</Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Has IF2 Decreased Your Medicaiton: {beforeQs[0]} </Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with work: {beforeQs[2]}</Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with home:{beforeQs[1]}</Text>
+  <Table style={{paddingTop:'4%'}}>
+      <Row textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} widthArr={widthArray} data={["Time", "Preset#", "Amp.","Mins"]}></Row>
+      
+      <ScrollView>
+        {tableData.map((rowData,index)=>(
+           
+           <Row style={[styles.dayUsageRow, { height: questionHeight, backgroundColor: '#e0ecff' }]}  textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} widthArr={widthArray} key={index} data={[rowData[0],rowData[1],rowData[3],rowData[4]]} />
+         
+        ))}
+      </ScrollView>
+  </Table>
+    <Text style={{paddingTop:'2%',fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Pain Level AFTER Treatment: {afterQs[3]}</Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Has IF2 Decreased Your Medicaiton: {afterQs[0]} </Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with work: {afterQs[2]}</Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with home: {afterQs[1]}</Text>
+  </View>)
 
+/*
   return (<View>
     <View style={{ alignSelf: 'center', flexDirection: 'row', padding: '5%' }}>
       <TouchableOpacity onPress={() => { setButtons("Usage"); setQuestionHeight(40); setUsageHeight(0); }} style={{ flex: 1, borderWidth: 1, borderColor: avidPurpleHex, backgroundColor: usageBtnBkgrndClr }}><Text style={{ padding: '4%', alignSelf: 'center', fontSize: 16, fontWeight: 'bold', color: usageBtnTxtClr }}>Usage</Text></TouchableOpacity>
@@ -797,7 +919,7 @@ const DayUsageScreen = ({ route, navigation }) => {
 
     </Table>
 
-  </View>);
+  </View>);*/
 } // End DayUsageScreen
 
 const SignupScreen = ({ navigation }) => {
@@ -1075,43 +1197,7 @@ export function req_ConfirmSendData(idCode,serialNumber,final_data){
 
   const Circle = (color, size) => { return <View style={{ alignSelf: 'center', width: size, height: size, borderRadius: size / 2, backgroundColor: color }}></View> };
   console.log("Marked Dates Is " + markedDates);
-  /*AsyncStorage.getItem("lastUploadAddress").then((value)=>{
-    setLastUploadAddress(parseInt(value));
-    console.log("The last address was "+value);
-  });*/
-
-  /******** */
-
-
-  /*
-function updateDeviceTime(peripheral)
-{
-           console.log("Eggplants");
-           var nowTime= new Date();
-           console.log("Eggplants1");  
-           let dateMessage = [128,Number(nowTime.getYear()-100),Number((nowTime.getMonth())+1),Number(nowTime.getDate()),Number(nowTime.getHours()),Number(nowTime.getMinutes()),Number(nowTime.getSeconds())];
- 
-           BleManager.connect(peripheral.id).then(()=>{
- 
-             BleManager.retrieveServices(peripheral.id,[bluetoothIDs.svc_1110]).then((peripheralInfo)=>{
- 
-               BleManager.write(peripheral.id,bluetoothIDs.svc_1110,bluetoothIDs.chr_1111,dateMessage).then(()=>{
-                 console.log("Write New Time Success");
-                 setLastUploadTime(""+(currentDate.getYear()+1900)+"-"+(currentDate.getMonth()+1+"-"+(currentDate.getDate())));
-                 console.log("Big Mac With Cheese");
-                 AsyncStorage.removeItem("isConnected");
-                 BleManager.disconnect(peripheral.id);
-                 console.log("Successfully Wrote Time ");
-                 showNotification("Successfully Wrote Time ");
-                 isConnected = false;
- 
-               }).catch((error)=>{BleManager.disconnect(peripheral.id);showNotification("Error 1 ",error)});
- 
-             }).catch((error)=>{BleManager.disconnect(peripheral.id);showNotification("Error 2",error)});
- 
- 
-           }).catch((error)=>{BleManager.disconnect(peripheral.id);showNotification("Error 3",error)});
-}*/
+  
 
   async function getDeviceData(peripheral, service, writeCharacteristic, readCharacteristic, address) {
     //setScanStatus("Reading Device Data");
@@ -1128,14 +1214,7 @@ function updateDeviceTime(peripheral)
               var currentDate = new Date();
               console.log(currentDate.toTimeString().substring(0, 8));
               setLastUploadTime("" + (currentDate.getYear() + 1900) + "-" + (currentDate.getMonth() + 1 + "-" + (currentDate.getDate()) + " " + currentDate.toTimeString().substring(0, 8)));
-              /*
-              AsyncStorage.getItem("userDeviceInfo").then((deviceJSON)=>JSON.parse(deviceJSON)).then((deviceInfo)=>{
-
-    
-          setLastUploadTime(deviceInfo.lastdatatime);
-              */
-              //var currentDeviceInfo = await JSON.parse(AsyncStorage.getItem("userDeviceInfo"));
-              //setLastUploadTime(currentDate);
+             
               console.log("Big Mac With Cheese " + lastUploadTime + " " + "" + (currentDate.getYear() + 1900) + "-" + (currentDate.getMonth() + 1 + "-" + (currentDate.getDate())));
               setScanStatus("");
               setIsUpdating(false);
@@ -1150,6 +1229,7 @@ function updateDeviceTime(peripheral)
                 }
               }]);
               return (["Success", 0, 0]);
+              /*
               //Write Time
               console.log("The id for this is " + peripheral.id);
               //BleManager.disconnect(peripheral.id);
@@ -1158,6 +1238,7 @@ function updateDeviceTime(peripheral)
               console.log("Eggplants1");
               let dateMessage = [128, Number(nowTime.getYear() - 100), Number((nowTime.getMonth()) + 1), Number(nowTime.getDate()), Number(nowTime.getHours()), Number(nowTime.getMinutes()), Number(nowTime.getSeconds())];
               console.log("The Time Msg " + dateMessage);
+              */
 
 
 
@@ -1200,9 +1281,9 @@ function updateDeviceTime(peripheral)
                     catch (errore) {
                       console.log("What was the problem " + errore);
                     }
-                    if (lastAddressVal > 4070 || (lastUploadAddress != null && lastUploadAddress == lastAddressVal.toString())) {
+                    if (lastAddressVal > 5070 || (lastUploadAddress != null && lastUploadAddress == lastAddressVal.toString())) {
                       setScanCycleActive(false);
-                      console.log("It was rejected");
+                      console.log("It was rejected "+lastAddressVal+" "+lastUploadAddress);
                       const noticeString = lastAddressVal > 4070 ? "No New Records. Device was recently reset." : "No New Records";
                       console.log("Here Chicken");
 
@@ -1376,8 +1457,11 @@ function updateDeviceTime(peripheral)
 
                       if (responseFromJson.code == 200) {
                         console.log("Yessssir " + JSON.stringify(responseFromJson));
+                        //userAccountPtr.doc(usernameIn.toLowerCase()).set({ eMail: responseJson.data.email.toLowerCase(), md5pass: responseJson.data.PassHash });
+                        
                         AsyncStorage.getItem("lastDeviceAddress").then((value) => {
                           console.log("The Stuff IS This " + value);
+                          userAccountPtr.doc(currentUserData.username.toLowerCase()).set({lastUploadAddress:value},{merge:true});
                           setLastUploadAddress(value);
                           console.log("Device Address " + lastUploadAddress + " " + value)
                           AsyncStorage.getItem("userDeviceInfo").then((deviceJSON) => JSON.parse(deviceJSON)).then((deviceInfo) => {
@@ -1572,7 +1656,7 @@ function updateDeviceTime(peripheral)
     };
     // fetch(webURLS.login,logoutRequestOptions).then((response)=>response.json()).then((responseJson)=>{
     console.log("The User Token Isss " + userData.token);
-    fetch("http://avid.vqconnect.io/nodejs/check?action=activate&token="+currentUserData.token+"&idCode=Fc4749c&serialNo=02200321&data="+JSON.stringify({"data":"stuff"}),{method:'GET'}).then((response)=>{console.log("Your response is "+response)}).catch((error)=>{console.log("Problem "+error)});
+    //fetch("http://avid.vqconnect.io/nodejs/check?action=activate&token="+currentUserData.token+"&idCode=Fc4749c&serialNo=02200321&data="+JSON.stringify({"data":"stuff"}),{method:'GET'}).then((response)=>{console.log("Your response is "+response)}).catch((error)=>{console.log("Problem "+error)});
     fetch(webURLS.login, requestOptions).then((response) => response.json()).then((responseJson) => {
       console.log("Response was this " + responseJson.code);
       if (responseJson.code == 100) {
@@ -1723,8 +1807,8 @@ function updateDeviceTime(peripheral)
 
       </Modal>
       <Text style={{fontSize:20,fontWeight:'bold',textAlign:'center',color:'grey',marginTop:'5%',marginBottom:'3%'}}>Usage Calendar</Text>
-      <Calendar hideExtraDays={true} theme={{ textDayFontSize: 17 }} style={{  marginBottom: '2%' }} markedDates={markedDates} onDayPress={day => { console.log("The Day Is " + day.dateString); if (day.dateString in markedDates) { navigation.navigate("USAGE SUBSTACK", { currentDate: day.dateString, from: "calendar" }); } }} onMonthChange={month => { console.log("Month Is This" + month);/*setCurrentMonth([month.month,month.year]);*/updateCalendar([month.month, month.year]);/*setDatesUpdated(false);*/ }} markingType={'multi-dot'}></Calendar>
-      <View style={{ marginTop: '0%', marginHorizontal: '5%', marginBottom: '6%' }}>
+      <Calendar hideExtraDays={true} theme={{ textDayFontSize: 17 }} markedDates={markedDates} onDayPress={day => { console.log("The Day Is " + day.dateString); if (day.dateString in markedDates) { navigation.navigate("USAGE SUBSTACK", { currentDate: day.dateString, from: "calendar" }); } }} onMonthChange={month => { console.log("Month Is This" + month);/*setCurrentMonth([month.month,month.year]);*/updateCalendar([month.month, month.year]);/*setDatesUpdated(false);*/ }} markingType={'multi-dot'}></Calendar>
+      <View style={{ marginTop: '0%', marginHorizontal: '5%', marginBottom: '1%' }}>
         <View style={{ flexDirection: 'row' }}>{Circle("green", 10)}<Text style={styles.grayButton}>&nbsp;&nbsp;Usage Day</Text></View>
         {/*<View style={{ flexDirection: 'row' }}>{Circle("purple", 10)}<Text style={styles.grayButton}>&nbsp;&nbsp;Usage total time &lt; 20</Text></View>
         <View style={{ flexDirection: 'row' }}>{Circle("red", 10)}<Text style={styles.grayButton}>&nbsp;&nbsp;All questions are answered</Text></View>
@@ -1906,6 +1990,9 @@ const LoginScreen = ({ route, navigation }) =>
       await auth().signOut();
     var requestOptions;
 
+    
+
+
     userAccountPtr.doc(usernameIn.toLowerCase()).get().then((document) => {
       if (document.exists) {
         console.log("Step 4")
@@ -2064,35 +2151,56 @@ const LoginScreen = ({ route, navigation }) =>
 
 const UsageDetailScreen = ({ route, navigation }) => {
   const currentData = route.params.dataObject;
+  console.log("Log Is");
+  console.log(route.params.dataObject);
+  const usageWidthArray = [Dimensions.get('screen').width * 0.2, Dimensions.get('screen').width * 0.3, Dimensions.get('screen').width * 0.4, Dimensions.get('screen').width * 0.1];
+  navigation.setOptions({  headerTitle: currentData.initialQuestions.DateOfTreatment+" "+currentData.initialQuestions.TimeOfTreatment});
 
   return (
     <View style={{ width: '100%' }}>
-      <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Date</Text><Text style={styles.usageDetailData}>{currentData.DateOfTreatment}</Text></View>
-      <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Time</Text><Text style={styles.usageDetailData}>{currentData.TimeOfTreatment}</Text></View>
-      {route.params.isUsage == true &&
-        <View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Preset</Text><Text style={styles.usageDetailData}>{currentData.PresetNumber}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Device Pause Time</Text><Text style={styles.usageDetailData}>{currentData.MinOfPause}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Channel 1 max Amp used</Text><Text style={styles.usageDetailData}>{currentData.Channel1MaxAmpUsed}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Channel 1 average Amp used</Text><Text style={styles.usageDetailData}>{currentData.Channel1AverageAmpUsed}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Channel 2 max Amp used</Text><Text style={styles.usageDetailData}>{currentData.Channel2MaxAmpUsed}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Channel 2 average Amp used</Text><Text style={styles.usageDetailData}>{currentData.Channel2AverageAmpUsed}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Minutes of Use</Text><Text style={styles.usageDetailData}>{currentData.MinOfUse}</Text></View>
-        </View>}
-      {route.params.isUsage == false &&
-        <View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Q1 Pain Before</Text><Text style={styles.usageDetailData}>{currentData.PainBefore}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Q2 Decr Meds</Text><Text style={styles.usageDetailData}>{currentData.DecrMeds}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Q3 Help Work</Text><Text style={styles.usageDetailData}>{currentData.HelpWork}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Q4 Help Home</Text><Text style={styles.usageDetailData}>{currentData.HelpHome}</Text></View>
-          <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Q5 Pain After</Text><Text style={styles.usageDetailData}>{currentData.PainAfter}</Text></View>
-        </View>
-
-
+      
+      <Text marginTop='5%' marginBottom='1%' style={{fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center'}}>INITIAL QUESTIONS:</Text>
+      {currentData.initialQuestions.PainBefore != "default" &&
+        <Text style={styles.usageDetailLabels}>Pain Level BEFORE Treatment: {currentData.initialQuestions.PainBefore}</Text>
       }
-      <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Address</Text><Text style={styles.usageDetailData}>{currentData.Address}</Text></View>
-      <View style={styles.usageDataDetailCell}><Text style={styles.usageDetailLabels}>Upload Time</Text><Text style={styles.usageDetailData}>{currentData.uploadTime}</Text></View>
+      {currentData.initialQuestions.DecrMeds != "default" &&
+        <Text style={styles.usageDetailLabels}>Has IF2 Decreased Your Medication: {currentData.initialQuestions.DecrMeds}</Text>
+      }
+      {currentData.initialQuestions.HelpWork != "default" &&
+        <Text style={styles.usageDetailLabels}>Rate how IF2 helps with work: {currentData.initialQuestions.HelpWork}</Text>
+      }
+      {currentData.initialQuestions.HelpHome != "default" &&
+        <Text style={styles.usageDetailLabels}>Rate how IF2 helps with home: {currentData.initialQuestions.HelpHome}</Text>
+      }
+  <Table>
+  <Text marginTop='5%' marginBottom='1%' style={{fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center'}}>USAGE:</Text>
+  <Row textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} widthArr={usageWidthArray} data={["Preset #", "Min. Of Usage", "Amplitude"]}></Row>
 
+        <ScrollView>
+        {currentData.treatments.map((rowData,index)=>(
+           <TouchableOpacity buttonKey={index} onPress={() => { console.log(treatmentList[index]); navigation.navigate("Usage Data Detail", { dataObject: treatmentList[index], date: route.params.date}); }}>
+           <Row style={[styles.dayUsageRow, { height: 40, backgroundColor: '#e0ecff' }]}  textStyle={{ fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center' }} widthArr={usageWidthArray} key={index} data={[rowData.PresetNumber,rowData.MinOfUse,rowData.Channel2MaxAmpUsed]} />
+         </TouchableOpacity>
+        ))}
+      </ScrollView>
+      </Table>
+
+      <Text marginTop='5%' marginBottom='1%' style={{fontSize: 16, fontWeight: 'bold', color: '#555555', textAlign: 'center'}}>FINAL QUESTIONS:</Text>
+      {currentData.finalQuestions.PainAfter != "default" &&
+        <Text style={styles.usageDetailLabels}>Pain Level AFTER Treatment: {currentData.finalQuestions.PainAfter}</Text>
+      }
+      {currentData.finalQuestions.DecrMeds != "default" &&
+        <Text style={styles.usageDetailLabels}>Has IF2 Decreased Your Medication: {currentData.finalQuestions.DecrMeds}</Text>
+      }
+      {currentData.finalQuestions.HelpWork != "default" &&
+        <Text style={styles.usageDetailLabels}>Rate how IF2 helps with work: {currentData.finalQuestions.HelpWork}</Text>
+      }
+      {currentData.finalQuestions.HelpHome != "default" &&
+        <Text style={styles.usageDetailLabels}>Rate how IF2 helps with home: {currentData.finalQuestions.HelpHome}</Text>
+      }
+      
+      
+     
     </View>
 
   );
@@ -2471,6 +2579,7 @@ const DeviceSelection = ({ route, navigation }) => {
           auth().createUserWithEmailAndPassword(responseJson.data.email.toLowerCase(), route.params.newUserInfo.password).then((userCredential) => {
             setRegisterStatus("Creating Firebase Record");
             userAccountPtr.doc(route.params.newUserInfo.username).set({ eMail: responseJson.data.email.toLowerCase(), md5pass: responseJson.data.PassHash });
+            
             auth().currentUser.sendEmailVerification().then(() => { console.log("E-mail success"); return; });
             //return;
           }).then(() => {
