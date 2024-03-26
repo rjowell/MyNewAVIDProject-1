@@ -874,7 +874,7 @@ const DayUsageScreen = ({ route, navigation }) => {
   return(
   <View>
     <Text style={{paddingTop:'2%',fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Pain Level BEFORE Treatment: {beforeQs[4]}</Text>
-    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Has IF2 Decreased Your Medicaiton: {beforeQs[0]} </Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Has IF2 Decreased Your Medication: {beforeQs[0]} </Text>
     <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with work: {beforeQs[2]}</Text>
     <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with home:{beforeQs[1]}</Text>
   <Table style={{paddingTop:'4%'}}>
@@ -889,7 +889,7 @@ const DayUsageScreen = ({ route, navigation }) => {
       </ScrollView>
   </Table>
     <Text style={{paddingTop:'2%',fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Pain Level AFTER Treatment: {afterQs[3]}</Text>
-    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Has IF2 Decreased Your Medicaiton: {afterQs[0]} </Text>
+    <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Has IF2 Decreased Your Medication: {afterQs[0]} </Text>
     <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with work: {afterQs[2]}</Text>
     <Text style={{fontSize: 14, fontWeight: 'bold', color: '#555555',alignSelf:'center'}}>Rate how IF2 helps with home: {afterQs[1]}</Text>
   </View>)
