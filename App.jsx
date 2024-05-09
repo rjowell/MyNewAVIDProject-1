@@ -55,6 +55,8 @@ import {
 var currentUserData, userDeviceInfo, configArray;
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
+const myVariable = "Hello";
+const anotherVariable = "World";
 const languages = ['English', 'Spanish', 'French', 'German'];
 const months = ["Jan.", "Feb.", "Mar.", "Apr.", "May.", "Jun.", "Jul.", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."];
 const avidPurpleHex = '#722053';
